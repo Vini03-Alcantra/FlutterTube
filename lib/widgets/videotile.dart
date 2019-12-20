@@ -2,6 +2,9 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_youtube/flutter_youtube.dart';
+import 'package:fluttertube/api.dart';
+import 'package:fluttertube/blocs/favorites_bloc.dart';
 import 'package:fluttertube/models/videos.dart';
 
 class VideoTile extends StatelessWidget{
@@ -10,7 +13,15 @@ class VideoTile extends StatelessWidget{
   VideoTile(this.video);
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final bloc = BlocProvider.of<FavoriteBloc>(context);
+    return GestureDetector(
+      onTap: (){
+        FlutterYoutube.playYoutubeVideoById(
+          apiKey: API_KEY,
+          videoId: video.id
+        );
+      },
+      child: Container(
       margin: EdgeInsets.symmetric(vertical: 4),
       child: Column( 
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,20 +59,31 @@ class VideoTile extends StatelessWidget{
                   ],
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.star_border),
-                color: Colors.white,
-                iconSize: 30,
-                onPressed: (){
-
+              StreamBuilder<Map<String, Video>>(
+                stream: bloc.outFav,
+                builder: (context, snapshot){
+                  if(snapshot.hasData)
+                  return IconButton(
+                    icon: Icon(snapshot.data.containsKey(video.id) ? 
+                      Icons.star : Icons.star_border),
+                      color: Colors.white,
+                      iconSize: 30,
+                      onPressed: (){
+                        bloc.toggleFavorites(video);
+                      },
+                  );
+                  else
+                    return CircularProgressIndicator();
                 },
               )
+              
             ],
           )
         ],
       ),
+    ),
     ); 
-    //final bloc = BlocProvider.of<FavoriteBloc>(context)
+    
   }
 
 }
